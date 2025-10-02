@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Expense Tracker Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #F6F9FB; color: #2A3A4B; margin: 0; }
+    .container { max-width: 900px; margin: 32px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px #0002; padding: 22px;}
+    h2 { color: #3574e0; }
+    .dashboard { display: flex; gap: 18px; margin-bottom: 20px; flex-wrap: wrap;}
+    .stat { flex:1 1 200px; background: #eafbfa; color: #1a788c; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 4px #0001; font-size:20px;}
+    form { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;}
+    input, select {padding:7px; border-radius:5px; border:1px solid #b0b9cc;}
+    button { background: #3574e0; color: #fff; border: none; border-radius: 5px; padding: 7px 14px; cursor: pointer; }
+    button.del { background:#CC5757; }
+    table { width:100%; border-collapse:collapse; margin-top:18px; font-size:15px;}
+    th,td {padding:8px;border:1px solid #e5eaef;}
+    th {background:#eef5fc;}
+    canvas {background:#fff; border-radius:12px; margin-bottom:16px;}
+    @media (max-width:700px) {.container{padding:7px}.dashboard{flex-direction:column;}}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Expense Tracker Dashboard</h2>
+    <div class="dashboard">
+      <div class="stat"><span id="totalMonth"></span><br><small>This Month</small></div>
+      <div class="stat"><span id="totalToday"></span><br><small>Today</small></div>
+      <div class="stat"><span id="categoryTop"></span><br><small>Top Category</small></div>
+    </div>
+    <form id="expenseForm" autocomplete="off">
+      <input type="date" id="date" required />
+      <input type="number" id="amount" placeholder="Amount" required />
+      <select id="category" required>
+        <option value="">Category</option>
+        <option>Food</option>
+        <option>Transport</option>
+        <option>Shopping</option>
+        <option>Bills</option>
+        <option>Other</option>
+      </select>
+      <input type="text" id="note" placeholder="Note" />
+      <button type="submit">Add</button>
+      <button type="button" onclick="exportCSV()">Export CSV</button>
+    </form>
+    <canvas id="categoryChart" height="75"></canvas>
+    <canvas id="monthlyChart" height="75"></canvas>
+    <table id="expenseTable">
+      <thead><tr><th>Date</th><th>Amount</th><th>Category</th><th>Note</th><th>Delete</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <script>
+    let expenses=JSON.parse(localStorage.getItem('expenses')||'[]');
+    const colors={Food:"#E36C6C",Transport:"#E3DF6C",Shopping:"#6C8DE3",Bills:"#65C874",Other:"#9472D8"};
+    function renderDashboard(){
+      let today=new Date().toISOString().slice(0,10),month=today.slice(0,7);
+      let totMonth=0,totToday=0,cats={};
+      expenses.forEach(e=>{
+        if(e.date?.slice(0,7)==month)totMonth+=+e.amount;
+        if(e.date==today)totToday+=+e.amount;
+        cats[e.category]=(cats[e.category]||0)+(+e.amount);
+      });
+      let topCat=Object.keys(cats).length?Object.entries(cats).reduce((a,b)=>a[1]>b[1]?a:b)[0]:"--";
+      totalMonth.innerText="₹"+totMonth;totalToday.innerText="₹"+totToday;categoryTop.innerText=topCat||"--";
+    }
+    function renderTable(){
+      let tbody=expenseTable.querySelector('tbody');tbody.innerHTML='';
+      expenses.forEach((exp,i)=>{
+        tbody.innerHTML+=`<tr><td>${exp.date}</td><td>${exp.amount}</td><td>${exp.category}</td><td>${exp.note}</td>
+          <td><button class="del" onclick="deleteExpense(${i})">Delete</button></td></tr>`;
+      });
+    }
+    function deleteExpense(i){
+      expenses.splice(i,1);localStorage.setItem('expenses',JSON.stringify(expenses));
+      renderDashboard();renderTable();renderCharts();
+    }
+    expenseForm.onsubmit=function(e){
+      e.preventDefault();
+      expenses.push({date:date.value,amount:amount.value,category:category.value,note:note.value});
+      localStorage.setItem('expenses',JSON.stringify(expenses));
+      this.reset();renderDashboard();renderTable();renderCharts();
+    }
+    function exportCSV(){
+      let csv="Date,Amount,Category,Note\n";
+      expenses.forEach(e=>{csv+=`${e.date},${e.amount},${e.category},${e.note}\n`});
+      let blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download='expenses.csv';a.click();URL.revokeObjectURL(url);
+    }
+    let categoryChart,monthlyChart;
+    function renderCharts(){
+      let cats={},catColors=[];
+      expenses.forEach(e=>{cats[e.category]=(cats[e.category]||0)+(+e.amount)});
+      let catLabels=Object.keys(cats),catData=catLabels.map(l=>cats[l]),catColors=catLabels.map(l=>colors[l]||"#555");
+      if(categoryChart)categoryChart.destroy();
+      categoryChart=new Chart(categoryChart.getContext('2d'),{
+        type:'bar',
+        data:{labels:catLabels,datasets:[{data:catData,backgroundColor:catColors,label:"Expense by Category"}]},
+        options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+      });
+      let months={};
+      expenses.forEach(e=>{let m=e.date?.slice(0,7)||"";months[m]=(months[m]||0)+(+e.amount)});
+      let monthLabels=Object.keys(months).sort(),monthData=monthLabels.map(m=>months[m]);
+      if(monthlyChart)monthlyChart.destroy();
+      monthlyChart=new Chart(monthlyChart.getContext('2d'),{
+        type:'bar',data:{labels:monthLabels,datasets:[{data:monthData,backgroundColor:"#3574e0",label:"Monthly Expense"}]},
+        options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+      });
+    }
+    renderDashboard();renderTable();renderCharts();
+  </script>
+</body>
+</html>
