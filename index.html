@@ -5,47 +5,146 @@
   <title>Expense Tracker Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    /* Reset + Base */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg,#e0f7fa,#f1f8ff); color: #2A3A4B; }
-    .container { max-width: 1000px; margin: 40px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 20px #0002; padding: 30px; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      color: #2A3A4B;
+    }
 
-    /* Header */
-    h2 { color: #3574e0; text-align: center; margin-bottom: 25px; }
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 25px;
+    }
 
-    /* Dashboard Cards */
-    .dashboard { display: flex; gap: 18px; margin-bottom: 30px; flex-wrap: wrap; justify-content: center; }
-    .stat { flex:1 1 200px; background: linear-gradient(135deg,#3574e0,#5691e8); color:#fff; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 3px 12px #0003; font-size:22px; font-weight:600; }
-    .stat small { display: block; font-size: 14px; opacity: 0.85; margin-top: 6px; }
+    h2 {
+      text-align: center;
+      color: #fff;
+      font-size: 32px;
+      margin-bottom: 25px;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+
+    /* Dashboard Stats */
+    .dashboard {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 30px;
+    }
+
+    .stat {
+      flex: 1 1 250px;
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(8px);
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease-in-out;
+    }
+
+    .stat:hover { transform: translateY(-6px); }
+
+    .stat span {
+      display: block;
+      font-size: 26px;
+      font-weight: bold;
+    }
+    .stat small {
+      display: block;
+      margin-top: 8px;
+      font-size: 15px;
+      opacity: 0.85;
+    }
 
     /* Form */
-    form { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; justify-content: center;}
-    input, select {padding:10px; border-radius:6px; border:1px solid #ccd5e0; font-size:14px; flex:1 1 150px;}
-    button { background: #3574e0; color: #fff; border: none; border-radius: 6px; padding: 10px 18px; cursor: pointer; font-size:14px; }
-    button:hover { background:#245ac6; }
-    button.del { background:#e74c3c; }
-    button.del:hover { background:#c0392b; }
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(8px);
+      padding: 18px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
 
-    /* Table */
-    table { width:100%; border-collapse:collapse; margin-top:25px; font-size:15px; }
-    th,td {padding:10px; border:1px solid #e5eaef; text-align:center;}
-    th {background:#f5f9ff; color:#3574e0; font-weight:600;}
-    tr:nth-child(even) { background:#fafcff; }
+    input, select {
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      flex: 1 1 160px;
+      font-size: 14px;
+    }
+
+    button {
+      background: #3574e0;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #245ac6; }
+    button.del { background: #e74c3c; }
+    button.del:hover { background: #c0392b; }
 
     /* Charts */
-    canvas { background:#fff; border-radius:12px; box-shadow:0 2px 8px #0001; margin:20px 0; padding:10px; }
+    .charts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin: 25px 0;
+    }
 
-    @media (max-width:768px) {
-      .container{padding:15px}
-      .dashboard{flex-direction:column}
+    canvas {
+      background: #fff;
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: #3574e0;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    tr:nth-child(even) { background: #f9fbff; }
+
+    @media (max-width: 800px) {
+      .charts { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>💰 Expense Tracker Dashboard</h2>
+    <h2>💰 My Expense Tracker</h2>
 
-    <!-- Dashboard Summary -->
+    <!-- Dashboard -->
     <div class="dashboard">
       <div class="stat"><span id="totalMonth">₹0</span><small>This Month</small></div>
       <div class="stat"><span id="totalToday">₹0</span><small>Today</small></div>
@@ -66,19 +165,19 @@
       </select>
       <input type="text" id="note" placeholder="Note" />
       <button type="submit">➕ Add</button>
-      <button type="button" onclick="exportCSV()">⬇️ Export CSV</button>
+      <button type="button" onclick="exportCSV()">⬇️ Export</button>
     </form>
 
     <!-- Charts -->
-    <h3 style="color:#3574e0; margin:20px 0 10px;">📊 Expense Insights</h3>
-    <canvas id="categoryChart" height="80"></canvas>
-    <canvas id="monthlyChart" height="80"></canvas>
+    <div class="charts">
+      <canvas id="categoryChart" height="200"></canvas>
+      <canvas id="monthlyChart" height="200"></canvas>
+    </div>
 
     <!-- Expense Table -->
-    <h3 style="color:#3574e0; margin:25px 0 10px;">📋 Expense History</h3>
     <table id="expenseTable">
       <thead>
-        <tr><th>Date</th><th>Amount</th><th>Category</th><th>Note</th><th>Delete</th></tr>
+        <tr><th>Date</th><th>Amount</th><th>Category</th><th>Note</th><th>Action</th></tr>
       </thead>
       <tbody></tbody>
     </table>
@@ -86,22 +185,17 @@
 
   <script>
     let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-
-    const colors = { Food:"#E36C6C", Transport:"#E3DF6C", Shopping:"#6C8DE3", Bills:"#65C874", Other:"#9472D8" };
+    const colors = { Food:"#FF6B6B", Transport:"#FFD93D", Shopping:"#6C63FF", Bills:"#1DD1A1", Other:"#54a0ff" };
 
     function renderDashboard() {
-      let today = new Date().toISOString().slice(0,10),
-          month = today.slice(0,7);
+      let today = new Date().toISOString().slice(0,10), month = today.slice(0,7);
       let totMonth=0, totToday=0, cats={};
-
       expenses.forEach(e=>{
         if(e.date?.slice(0,7)==month) totMonth+=+e.amount;
         if(e.date==today) totToday+=+e.amount;
         cats[e.category]=(cats[e.category]||0)+(+e.amount);
       });
-
       let topCat = Object.keys(cats).length ? Object.entries(cats).reduce((a,b)=>a[1]>b[1]?a:b)[0] : "--";
-
       document.getElementById("totalMonth").innerText="₹"+totMonth;
       document.getElementById("totalToday").innerText="₹"+totToday;
       document.getElementById("categoryTop").innerText=topCat||"--";
@@ -150,32 +244,29 @@
 
     let categoryChart, monthlyChart;
     function renderCharts(){
-      // Category Chart
+      // Category chart (Pie)
       let cats={}; expenses.forEach(e=>{cats[e.category]=(cats[e.category]||0)+(+e.amount)});
       let catLabels=Object.keys(cats), catData=catLabels.map(l=>cats[l]), catColors=catLabels.map(l=>colors[l]||"#555");
-
       let categoryCanvas=document.getElementById('categoryChart');
       if(categoryChart) categoryChart.destroy();
       categoryChart=new Chart(categoryCanvas.getContext('2d'),{
-        type:'doughnut',
+        type:'pie',
         data:{labels:catLabels,datasets:[{data:catData,backgroundColor:catColors}]},
         options:{plugins:{legend:{position:'bottom'}}}
       });
 
-      // Monthly Chart
+      // Monthly trend (Line)
       let months={}; expenses.forEach(e=>{let m=e.date?.slice(0,7)||""; months[m]=(months[m]||0)+(+e.amount)});
       let monthLabels=Object.keys(months).sort(), monthData=monthLabels.map(m=>months[m]);
-
       let monthlyCanvas=document.getElementById('monthlyChart');
       if(monthlyChart) monthlyChart.destroy();
       monthlyChart=new Chart(monthlyCanvas.getContext('2d'),{
-        type:'bar',
-        data:{labels:monthLabels,datasets:[{data:monthData,backgroundColor:"#3574e0",label:"Monthly Expense"}]},
-        options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+        type:'line',
+        data:{labels:monthLabels,datasets:[{data:monthData,borderColor:"#3574e0",fill:true,backgroundColor:"rgba(53,116,224,0.2)",label:"Monthly Expense"}]},
+        options:{scales:{y:{beginAtZero:true}}}
       });
     }
 
-    // Initialize
     renderDashboard(); renderTable(); renderCharts();
   </script>
 </body>
