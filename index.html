@@ -5,39 +5,59 @@
   <title>Expense Tracker Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #F6F9FB; color: #2A3A4B; margin: 0; }
-    .container { max-width: 900px; margin: 32px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px #0002; padding: 22px;}
-    h2 { color: #3574e0; }
-    .dashboard { display: flex; gap: 18px; margin-bottom: 20px; flex-wrap: wrap;}
-    .stat { flex:1 1 200px; background: #eafbfa; color: #1a788c; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 1px 4px #0001; font-size:20px;}
-    form { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;}
-    input, select {padding:7px; border-radius:5px; border:1px solid #b0b9cc;}
-    button { background: #3574e0; color: #fff; border: none; border-radius: 5px; padding: 7px 14px; cursor: pointer; }
-    button.del { background:#CC5757; }
-    table { width:100%; border-collapse:collapse; margin-top:18px; font-size:15px;}
-    th,td {padding:8px;border:1px solid #e5eaef;}
-    th {background:#eef5fc;}
-    canvas {background:#fff; border-radius:12px; margin-bottom:16px;}
-    @media (max-width:700px) {.container{padding:7px}.dashboard{flex-direction:column;}}
+    /* Reset + Base */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg,#e0f7fa,#f1f8ff); color: #2A3A4B; }
+    .container { max-width: 1000px; margin: 40px auto; background: #fff; border-radius: 16px; box-shadow: 0 4px 20px #0002; padding: 30px; }
+
+    /* Header */
+    h2 { color: #3574e0; text-align: center; margin-bottom: 25px; }
+
+    /* Dashboard Cards */
+    .dashboard { display: flex; gap: 18px; margin-bottom: 30px; flex-wrap: wrap; justify-content: center; }
+    .stat { flex:1 1 200px; background: linear-gradient(135deg,#3574e0,#5691e8); color:#fff; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 3px 12px #0003; font-size:22px; font-weight:600; }
+    .stat small { display: block; font-size: 14px; opacity: 0.85; margin-top: 6px; }
+
+    /* Form */
+    form { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; justify-content: center;}
+    input, select {padding:10px; border-radius:6px; border:1px solid #ccd5e0; font-size:14px; flex:1 1 150px;}
+    button { background: #3574e0; color: #fff; border: none; border-radius: 6px; padding: 10px 18px; cursor: pointer; font-size:14px; }
+    button:hover { background:#245ac6; }
+    button.del { background:#e74c3c; }
+    button.del:hover { background:#c0392b; }
+
+    /* Table */
+    table { width:100%; border-collapse:collapse; margin-top:25px; font-size:15px; }
+    th,td {padding:10px; border:1px solid #e5eaef; text-align:center;}
+    th {background:#f5f9ff; color:#3574e0; font-weight:600;}
+    tr:nth-child(even) { background:#fafcff; }
+
+    /* Charts */
+    canvas { background:#fff; border-radius:12px; box-shadow:0 2px 8px #0001; margin:20px 0; padding:10px; }
+
+    @media (max-width:768px) {
+      .container{padding:15px}
+      .dashboard{flex-direction:column}
+    }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Expense Tracker Dashboard</h2>
+    <h2>💰 Expense Tracker Dashboard</h2>
 
     <!-- Dashboard Summary -->
     <div class="dashboard">
-      <div class="stat"><span id="totalMonth"></span><br><small>This Month</small></div>
-      <div class="stat"><span id="totalToday"></span><br><small>Today</small></div>
-      <div class="stat"><span id="categoryTop"></span><br><small>Top Category</small></div>
+      <div class="stat"><span id="totalMonth">₹0</span><small>This Month</small></div>
+      <div class="stat"><span id="totalToday">₹0</span><small>Today</small></div>
+      <div class="stat"><span id="categoryTop">--</span><small>Top Category</small></div>
     </div>
 
     <!-- Form -->
     <form id="expenseForm" autocomplete="off">
       <input type="date" id="date" required />
-      <input type="number" id="amount" placeholder="Amount" required />
+      <input type="number" id="amount" placeholder="Amount (₹)" required />
       <select id="category" required>
-        <option value="">Category</option>
+        <option value="">Select Category</option>
         <option>Food</option>
         <option>Transport</option>
         <option>Shopping</option>
@@ -45,15 +65,17 @@
         <option>Other</option>
       </select>
       <input type="text" id="note" placeholder="Note" />
-      <button type="submit">Add</button>
-      <button type="button" onclick="exportCSV()">Export CSV</button>
+      <button type="submit">➕ Add</button>
+      <button type="button" onclick="exportCSV()">⬇️ Export CSV</button>
     </form>
 
     <!-- Charts -->
-    <canvas id="categoryChart" height="75"></canvas>
-    <canvas id="monthlyChart" height="75"></canvas>
+    <h3 style="color:#3574e0; margin:20px 0 10px;">📊 Expense Insights</h3>
+    <canvas id="categoryChart" height="80"></canvas>
+    <canvas id="monthlyChart" height="80"></canvas>
 
     <!-- Expense Table -->
+    <h3 style="color:#3574e0; margin:25px 0 10px;">📋 Expense History</h3>
     <table id="expenseTable">
       <thead>
         <tr><th>Date</th><th>Amount</th><th>Category</th><th>Note</th><th>Delete</th></tr>
@@ -65,42 +87,34 @@
   <script>
     let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
 
-    const colors = {
-      Food: "#E36C6C",
-      Transport: "#E3DF6C",
-      Shopping: "#6C8DE3",
-      Bills: "#65C874",
-      Other: "#9472D8"
-    };
+    const colors = { Food:"#E36C6C", Transport:"#E3DF6C", Shopping:"#6C8DE3", Bills:"#65C874", Other:"#9472D8" };
 
     function renderDashboard() {
       let today = new Date().toISOString().slice(0,10),
           month = today.slice(0,7);
-      let totMonth = 0, totToday = 0, cats = {};
+      let totMonth=0, totToday=0, cats={};
 
-      expenses.forEach(e => {
-        if (e.date?.slice(0,7) == month) totMonth += +e.amount;
-        if (e.date == today) totToday += +e.amount;
-        cats[e.category] = (cats[e.category] || 0) + (+e.amount);
+      expenses.forEach(e=>{
+        if(e.date?.slice(0,7)==month) totMonth+=+e.amount;
+        if(e.date==today) totToday+=+e.amount;
+        cats[e.category]=(cats[e.category]||0)+(+e.amount);
       });
 
-      let topCat = Object.keys(cats).length 
-                   ? Object.entries(cats).reduce((a,b)=> a[1]>b[1]?a:b)[0] 
-                   : "--";
+      let topCat = Object.keys(cats).length ? Object.entries(cats).reduce((a,b)=>a[1]>b[1]?a:b)[0] : "--";
 
-      document.getElementById("totalMonth").innerText = "₹" + totMonth;
-      document.getElementById("totalToday").innerText = "₹" + totToday;
-      document.getElementById("categoryTop").innerText = topCat || "--";
+      document.getElementById("totalMonth").innerText="₹"+totMonth;
+      document.getElementById("totalToday").innerText="₹"+totToday;
+      document.getElementById("categoryTop").innerText=topCat||"--";
     }
 
     function renderTable() {
-      let tbody = document.querySelector('#expenseTable tbody');
-      tbody.innerHTML = '';
-      expenses.forEach((exp, i) => {
-        tbody.innerHTML += `
+      let tbody=document.querySelector('#expenseTable tbody');
+      tbody.innerHTML='';
+      expenses.forEach((exp,i)=>{
+        tbody.innerHTML+=`
           <tr>
             <td>${exp.date}</td>
-            <td>${exp.amount}</td>
+            <td>₹${exp.amount}</td>
             <td>${exp.category}</td>
             <td>${exp.note}</td>
             <td><button class="del" onclick="deleteExpense(${i})">Delete</button></td>
@@ -110,67 +124,59 @@
 
     function deleteExpense(i) {
       expenses.splice(i,1);
-      localStorage.setItem('expenses', JSON.stringify(expenses));
+      localStorage.setItem('expenses',JSON.stringify(expenses));
       renderDashboard(); renderTable(); renderCharts();
     }
 
-    document.getElementById("expenseForm").onsubmit = function(e) {
+    document.getElementById("expenseForm").onsubmit=function(e){
       e.preventDefault();
-      expenses.push({
-        date: date.value,
-        amount: amount.value,
-        category: category.value,
-        note: note.value
-      });
-      localStorage.setItem('expenses', JSON.stringify(expenses));
+      const dateVal=document.getElementById("date").value;
+      const amountVal=document.getElementById("amount").value;
+      const categoryVal=document.getElementById("category").value;
+      const noteVal=document.getElementById("note").value;
+
+      expenses.push({date:dateVal, amount:amountVal, category:categoryVal, note:noteVal});
+      localStorage.setItem('expenses',JSON.stringify(expenses));
       this.reset();
       renderDashboard(); renderTable(); renderCharts();
     }
 
     function exportCSV() {
-      let csv = "Date,Amount,Category,Note\n";
-      expenses.forEach(e => {
-        csv += `${e.date},${e.amount},${e.category},${e.note}\n`;
-      });
-      let blob = new Blob([csv], {type:'text/csv'});
-      let url = URL.createObjectURL(blob);
-      let a = document.createElement('a');
-      a.href = url;
-      a.download = 'expenses.csv';
-      a.click();
-      URL.revokeObjectURL(url);
+      let csv="Date,Amount,Category,Note\n";
+      expenses.forEach(e=>{csv+=`${e.date},${e.amount},${e.category},${e.note}\n`});
+      let blob=new Blob([csv],{type:'text/csv'}), url=URL.createObjectURL(blob);
+      let a=document.createElement('a'); a.href=url; a.download='expenses.csv'; a.click(); URL.revokeObjectURL(url);
     }
 
     let categoryChart, monthlyChart;
-    function renderCharts() {
+    function renderCharts(){
       // Category Chart
-      let cats = {};
-      expenses.forEach(e => {
-        cats[e.category] = (cats[e.category] || 0) + (+e.amount);
-      });
-      let catLabels = Object.keys(cats),
-          catData = catLabels.map(l => cats[l]),
-          catColors = catLabels.map(l => colors[l] || "#555");
+      let cats={}; expenses.forEach(e=>{cats[e.category]=(cats[e.category]||0)+(+e.amount)});
+      let catLabels=Object.keys(cats), catData=catLabels.map(l=>cats[l]), catColors=catLabels.map(l=>colors[l]||"#555");
 
-      let categoryCanvas = document.getElementById('categoryChart');
-      if (categoryChart) categoryChart.destroy();
-      categoryChart = new Chart(categoryCanvas.getContext('2d'), {
-        type:'bar',
-        data:{ labels: catLabels, datasets:[{ data: catData, backgroundColor: catColors, label:"Expense by Category"}]},
-        options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}} }
+      let categoryCanvas=document.getElementById('categoryChart');
+      if(categoryChart) categoryChart.destroy();
+      categoryChart=new Chart(categoryCanvas.getContext('2d'),{
+        type:'doughnut',
+        data:{labels:catLabels,datasets:[{data:catData,backgroundColor:catColors}]},
+        options:{plugins:{legend:{position:'bottom'}}}
       });
 
       // Monthly Chart
-      let months = {};
-      expenses.forEach(e => {
-        let m = e.date?.slice(0,7) || "";
-        months[m] = (months[m] || 0) + (+e.amount);
-      });
-      let monthLabels = Object.keys(months).sort(),
-          monthData = monthLabels.map(m => months[m]);
+      let months={}; expenses.forEach(e=>{let m=e.date?.slice(0,7)||""; months[m]=(months[m]||0)+(+e.amount)});
+      let monthLabels=Object.keys(months).sort(), monthData=monthLabels.map(m=>months[m]);
 
-      let monthlyCanvas = document.getElementById('monthlyChart');
-      if (monthlyChart) monthlyChart.destroy();
-      monthlyChart = new Chart(monthlyCanvas.getContext('2d'), {
+      let monthlyCanvas=document.getElementById('monthlyChart');
+      if(monthlyChart) monthlyChart.destroy();
+      monthlyChart=new Chart(monthlyCanvas.getContext('2d'),{
         type:'bar',
-        data:{ lab
+        data:{labels:monthLabels,datasets:[{data:monthData,backgroundColor:"#3574e0",label:"Monthly Expense"}]},
+        options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+      });
+    }
+
+    // Initialize
+    renderDashboard(); renderTable(); renderCharts();
+  </script>
+</body>
+</html>
