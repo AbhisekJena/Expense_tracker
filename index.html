@@ -1,162 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Expense Tracker Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- Font Awesome for Icons -->
+  <script src="https://kit.fontawesome.com/yourkit.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Poppins', sans-serif;
-      margin: 0;
-      background: linear-gradient(135deg, #89f7fe, #66a6ff);
-      color: #2A3A4B;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      background: linear-gradient(135deg, #1a1f36, #0d0f1a);
+      color: #e4e7ef;
+      min-height: 100vh;
     }
-
-    .container {
-      max-width: 1100px;
-      margin: 40px auto;
-      padding: 25px;
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background: #141829;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #22263c;
     }
-
-    h2 {
+    .sidebar h2 {
+      font-size: 20px;
+      color: #4dd0e1;
+      margin-bottom: 30px;
       text-align: center;
-      color: #fff;
-      font-size: 32px;
-      margin-bottom: 25px;
-      text-shadow: 0 3px 6px rgba(0,0,0,0.2);
     }
-
-    /* Dashboard Stats */
+    .sidebar a {
+      color: #c7cad9;
+      text-decoration: none;
+      margin: 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+      transition: 0.2s;
+    }
+    .sidebar a:hover {
+      color: #4dd0e1;
+      transform: translateX(5px);
+    }
+    /* Main content */
+    .main {
+      flex: 1;
+      padding: 25px;
+      overflow-y: auto;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #4dd0e1;
+    }
     .dashboard {
       display: flex;
-      gap: 20px;
       flex-wrap: wrap;
-      justify-content: center;
-      margin-bottom: 30px;
+      gap: 20px;
+      margin-bottom: 25px;
     }
-
-    .stat {
-      flex: 1 1 250px;
-      background: rgba(255,255,255,0.15);
-      backdrop-filter: blur(8px);
-      border-radius: 15px;
-      padding: 25px;
-      text-align: center;
-      color: #fff;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-      transition: transform 0.2s ease-in-out;
+    .card {
+      flex: 1 1 240px;
+      background: #1f2439;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transition: 0.3s;
     }
-
-    .stat:hover { transform: translateY(-6px); }
-
-    .stat span {
-      display: block;
-      font-size: 26px;
-      font-weight: bold;
-    }
-    .stat small {
-      display: block;
-      margin-top: 8px;
-      font-size: 15px;
-      opacity: 0.85;
-    }
-
+    .card:hover { transform: translateY(-5px); }
+    .card h3 { font-size: 14px; color: #aaa; margin-bottom: 8px; }
+    .card p { font-size: 22px; font-weight: 700; color: #fff; }
     /* Form */
     form {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      background: rgba(255,255,255,0.2);
-      backdrop-filter: blur(8px);
-      padding: 18px;
-      border-radius: 12px;
-      margin-bottom: 30px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      margin-bottom: 25px;
+      background: #1f2439;
+      padding: 15px;
+      border-radius: 10px;
     }
-
     input, select {
       padding: 10px;
-      border-radius: 8px;
+      border-radius: 6px;
       border: none;
-      flex: 1 1 160px;
-      font-size: 14px;
-    }
-
-    button {
-      background: #3574e0;
+      outline: none;
+      flex: 1;
+      background: #2a304a;
       color: #fff;
-      border: none;
-      border-radius: 8px;
+    }
+    button {
       padding: 10px 18px;
+      border-radius: 6px;
+      border: none;
       cursor: pointer;
-      transition: background 0.2s;
+      background: #4dd0e1;
+      color: #111;
+      font-weight: 600;
+      transition: 0.3s;
     }
-    button:hover { background: #245ac6; }
-    button.del { background: #e74c3c; }
-    button.del:hover { background: #c0392b; }
-
-    /* Charts */
-    .charts {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-      margin: 25px 0;
-    }
-
-    canvas {
-      background: #fff;
-      border-radius: 15px;
-      padding: 15px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
-    }
-
+    button:hover { background: #3ab9c7; }
+    button.del { background: #d95f5f; color: #fff; }
     /* Table */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
-      background: #fff;
-      border-radius: 12px;
+      background: #1f2439;
+      border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+      font-size: 14px;
     }
-
     th, td {
-      padding: 12px;
-      text-align: center;
-      border-bottom: 1px solid #eee;
+      padding: 10px 12px;
+      text-align: left;
     }
-
-    th {
-      background: #3574e0;
-      color: #fff;
-      font-weight: 600;
+    th { background: #2a304a; color: #ccc; }
+    tr:nth-child(even) { background: #262c44; }
+    tr:hover { background: #2e3551; }
+    /* Charts */
+    canvas {
+      background: #1f2439;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
     }
-
-    tr:nth-child(even) { background: #f9fbff; }
-
-    @media (max-width: 800px) {
-      .charts { grid-template-columns: 1fr; }
+    @media(max-width:800px){
+      body { flex-direction: column; }
+      .sidebar { flex-direction: row; width: 100%; border-right:none; border-bottom:1px solid #22263c; }
+      .sidebar a { margin: 0 10px; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>💰 My Expense Tracker</h2>
-
-    <!-- Dashboard -->
+  <div class="sidebar">
+    <h2>💰 My Expenses</h2>
+    <a href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+    <a href="#"><i class="fas fa-chart-bar"></i> Analytics</a>
+    <a href="#"><i class="fas fa-history"></i> History</a>
+  </div>
+  <div class="main">
+    <h1>Expense Tracker Dashboard</h1>
     <div class="dashboard">
-      <div class="stat"><span id="totalMonth">₹0</span><small>This Month</small></div>
-      <div class="stat"><span id="totalToday">₹0</span><small>Today</small></div>
-      <div class="stat"><span id="categoryTop">--</span><small>Top Category</small></div>
+      <div class="card"><h3>This Month</h3><p id="totalMonth">₹0</p></div>
+      <div class="card"><h3>Today</h3><p id="totalToday">₹0</p></div>
+      <div class="card"><h3>Top Category</h3><p id="categoryTop">--</p></div>
     </div>
-
-    <!-- Form -->
     <form id="expenseForm" autocomplete="off">
       <input type="date" id="date" required />
-      <input type="number" id="amount" placeholder="Amount (₹)" required />
+      <input type="number" id="amount" placeholder="Amount" required />
       <select id="category" required>
-        <option value="">Select Category</option>
+        <option value="">Category</option>
         <option>Food</option>
         <option>Transport</option>
         <option>Shopping</option>
@@ -164,45 +163,35 @@
         <option>Other</option>
       </select>
       <input type="text" id="note" placeholder="Note" />
-      <button type="submit">➕ Add</button>
-      <button type="button" onclick="exportCSV()">⬇️ Export</button>
+      <button type="submit">Add</button>
+      <button type="button" onclick="exportCSV()">Export</button>
     </form>
-
-    <!-- Charts -->
-    <div class="charts">
-      <canvas id="categoryChart" height="200"></canvas>
-      <canvas id="monthlyChart" height="200"></canvas>
-    </div>
-
-    <!-- Expense Table -->
+    <canvas id="categoryChart" height="100"></canvas>
+    <canvas id="monthlyChart" height="100"></canvas>
     <table id="expenseTable">
-      <thead>
-        <tr><th>Date</th><th>Amount</th><th>Category</th><th>Note</th><th>Action</th></tr>
-      </thead>
+      <thead><tr><th>Date</th><th>Amount</th><th>Category</th><th>Note</th><th>Action</th></tr></thead>
       <tbody></tbody>
     </table>
   </div>
-
   <script>
     let expenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-    const colors = { Food:"#FF6B6B", Transport:"#FFD93D", Shopping:"#6C63FF", Bills:"#1DD1A1", Other:"#54a0ff" };
-
-    function renderDashboard() {
+    const colors = {Food:"#ef5350",Transport:"#ffee58",Shopping:"#42a5f5",Bills:"#66bb6a",Other:"#ab47bc"};
+    
+    function renderDashboard(){
       let today = new Date().toISOString().slice(0,10), month = today.slice(0,7);
       let totMonth=0, totToday=0, cats={};
       expenses.forEach(e=>{
-        if(e.date?.slice(0,7)==month) totMonth+=+e.amount;
-        if(e.date==today) totToday+=+e.amount;
+        if(e.date?.slice(0,7)===month) totMonth+=+e.amount;
+        if(e.date===today) totToday+=+e.amount;
         cats[e.category]=(cats[e.category]||0)+(+e.amount);
       });
-      let topCat = Object.keys(cats).length ? Object.entries(cats).reduce((a,b)=>a[1]>b[1]?a:b)[0] : "--";
+      let topCat = Object.keys(cats).length?Object.entries(cats).reduce((a,b)=>a[1]>b[1]?a:b)[0]:"--";
       document.getElementById("totalMonth").innerText="₹"+totMonth;
       document.getElementById("totalToday").innerText="₹"+totToday;
       document.getElementById("categoryTop").innerText=topCat||"--";
     }
-
-    function renderTable() {
-      let tbody=document.querySelector('#expenseTable tbody');
+    function renderTable(){
+      let tbody=document.querySelector("#expenseTable tbody");
       tbody.innerHTML='';
       expenses.forEach((exp,i)=>{
         tbody.innerHTML+=`
@@ -215,59 +204,51 @@
           </tr>`;
       });
     }
-
-    function deleteExpense(i) {
+    function deleteExpense(i){
       expenses.splice(i,1);
       localStorage.setItem('expenses',JSON.stringify(expenses));
-      renderDashboard(); renderTable(); renderCharts();
+      renderDashboard();renderTable();renderCharts();
     }
-
     document.getElementById("expenseForm").onsubmit=function(e){
       e.preventDefault();
       const dateVal=document.getElementById("date").value;
       const amountVal=document.getElementById("amount").value;
       const categoryVal=document.getElementById("category").value;
       const noteVal=document.getElementById("note").value;
-
-      expenses.push({date:dateVal, amount:amountVal, category:categoryVal, note:noteVal});
+      expenses.push({date:dateVal,amount:amountVal,category:categoryVal,note:noteVal});
       localStorage.setItem('expenses',JSON.stringify(expenses));
-      this.reset();
-      renderDashboard(); renderTable(); renderCharts();
+      this.reset();renderDashboard();renderTable();renderCharts();
     }
-
-    function exportCSV() {
+    function exportCSV(){
       let csv="Date,Amount,Category,Note\n";
       expenses.forEach(e=>{csv+=`${e.date},${e.amount},${e.category},${e.note}\n`});
-      let blob=new Blob([csv],{type:'text/csv'}), url=URL.createObjectURL(blob);
-      let a=document.createElement('a'); a.href=url; a.download='expenses.csv'; a.click(); URL.revokeObjectURL(url);
+      let blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+      a.href=url;a.download='expenses.csv';a.click();URL.revokeObjectURL(url);
     }
-
     let categoryChart, monthlyChart;
     function renderCharts(){
-      // Category chart (Pie)
-      let cats={}; expenses.forEach(e=>{cats[e.category]=(cats[e.category]||0)+(+e.amount)});
-      let catLabels=Object.keys(cats), catData=catLabels.map(l=>cats[l]), catColors=catLabels.map(l=>colors[l]||"#555");
-      let categoryCanvas=document.getElementById('categoryChart');
-      if(categoryChart) categoryChart.destroy();
-      categoryChart=new Chart(categoryCanvas.getContext('2d'),{
-        type:'pie',
+      // Category chart
+      let cats={},catColors=[];
+      expenses.forEach(e=>{cats[e.category]=(cats[e.category]||0)+(+e.amount)});
+      let catLabels=Object.keys(cats),catData=catLabels.map(l=>cats[l]),catColors=catLabels.map(l=>colors[l]||"#888");
+      if(categoryChart)categoryChart.destroy();
+      categoryChart=new Chart(document.getElementById('categoryChart').getContext('2d'),{
+        type:'doughnut',
         data:{labels:catLabels,datasets:[{data:catData,backgroundColor:catColors}]},
-        options:{plugins:{legend:{position:'bottom'}}}
+        options:{plugins:{legend:{labels:{color:'#e4e7ef'}}}}
       });
-
-      // Monthly trend (Line)
-      let months={}; expenses.forEach(e=>{let m=e.date?.slice(0,7)||""; months[m]=(months[m]||0)+(+e.amount)});
-      let monthLabels=Object.keys(months).sort(), monthData=monthLabels.map(m=>months[m]);
-      let monthlyCanvas=document.getElementById('monthlyChart');
-      if(monthlyChart) monthlyChart.destroy();
-      monthlyChart=new Chart(monthlyCanvas.getContext('2d'),{
-        type:'line',
-        data:{labels:monthLabels,datasets:[{data:monthData,borderColor:"#3574e0",fill:true,backgroundColor:"rgba(53,116,224,0.2)",label:"Monthly Expense"}]},
-        options:{scales:{y:{beginAtZero:true}}}
+      // Monthly chart
+      let months={};
+      expenses.forEach(e=>{let m=e.date?.slice(0,7)||"";months[m]=(months[m]||0)+(+e.amount)});
+      let monthLabels=Object.keys(months).sort(),monthData=monthLabels.map(m=>months[m]);
+      if(monthlyChart)monthlyChart.destroy();
+      monthlyChart=new Chart(document.getElementById('monthlyChart').getContext('2d'),{
+        type:'bar',
+        data:{labels:monthLabels,datasets:[{data:monthData,backgroundColor:"#4dd0e1"}]},
+        options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#e4e7ef'}},y:{ticks:{color:'#e4e7ef'},beginAtZero:true}}}
       });
     }
-
-    renderDashboard(); renderTable(); renderCharts();
+    renderDashboard();renderTable();renderCharts();
   </script>
 </body>
 </html>
