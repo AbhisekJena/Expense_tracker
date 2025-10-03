@@ -65,10 +65,15 @@
     button.del {
       background: #CC5757;
     }
+    .filter-bar {
+      margin-top: 15px;
+      margin-bottom: 10px;
+      text-align: right;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 18px;
+      margin-top: 10px;
       font-size: 15px;
     }
     th, td {
@@ -94,8 +99,8 @@
       text-align: center;
     }
     #categoryChart {
-      width: 100px !important;
-      height: 100px !important;
+      width: 150px !important;
+      height: 150px !important;
     }
     #monthlyChart {
       flex: 1;
@@ -106,6 +111,7 @@
       .container { padding: 12px; }
       .dashboard { flex-direction: column; }
       form { flex-direction: column; align-items: stretch; }
+      .filter-bar { text-align: center; }
     }
   </style>
 </head>
@@ -134,6 +140,12 @@
       <button type="submit"><i class="fa fa-plus"></i> Add</button>
       <button type="button" onclick="exportCSV()"><i class="fa fa-file-csv"></i> Export</button>
     </form>
+
+    <!-- Month Filter -->
+    <div class="filter-bar">
+      <label for="monthFilter"><b>View Month:</b></label>
+      <select id="monthFilter"></select>
+    </div>
 
     <table id="expenseTable">
       <thead>
@@ -177,17 +189,36 @@
       document.getElementById("categoryTop").innerText = topCat || "--";
     }
 
+    function populateMonthFilter() {
+      let months = [...new Set(expenses.map(e=>e.date?.slice(0,7)).filter(Boolean))].sort().reverse();
+      let select=document.getElementById("monthFilter");
+      select.innerHTML="";
+      months.forEach(m=>{
+        let opt=document.createElement("option");
+        opt.value=m;
+        opt.text=m;
+        select.appendChild(opt);
+      });
+      let currentMonth=new Date().toISOString().slice(0,7);
+      if(months.includes(currentMonth)) select.value=currentMonth;
+      else if(months.length) select.value=months[0];
+    }
+
     function renderTable() {
       let tbody=document.querySelector("#expenseTable tbody");
       tbody.innerHTML='';
-      expenses.forEach((exp,i)=>{
+      let selectedMonth=document.getElementById("monthFilter").value;
+      let filtered=expenses.filter(e=>e.date?.slice(0,7)==selectedMonth);
+      // sort descending by date
+      filtered.sort((a,b)=> b.date.localeCompare(a.date));
+      filtered.forEach((exp,i)=>{
         tbody.innerHTML+=`
           <tr>
             <td>${exp.date}</td>
             <td>₹${exp.amount}</td>
             <td>${exp.category}</td>
             <td>${exp.note}</td>
-            <td><button class="del" onclick="deleteExpense(${i})"><i class="fa fa-trash"></i></button></td>
+            <td><button class="del" onclick="deleteExpense(${expenses.indexOf(exp)})"><i class="fa fa-trash"></i></button></td>
           </tr>`;
       });
     }
@@ -195,7 +226,7 @@
     function deleteExpense(i){
       expenses.splice(i,1);
       localStorage.setItem('expenses',JSON.stringify(expenses));
-      renderDashboard();renderTable();renderCharts();
+      renderDashboard();populateMonthFilter();renderTable();renderCharts();
     }
 
     document.getElementById("expenseForm").onsubmit=function(e){
@@ -208,7 +239,7 @@
       });
       localStorage.setItem('expenses',JSON.stringify(expenses));
       this.reset();
-      renderDashboard();renderTable();renderCharts();
+      renderDashboard();populateMonthFilter();renderTable();renderCharts();
     }
 
     function exportCSV(){
@@ -250,7 +281,11 @@
       });
     }
 
+    document.getElementById("monthFilter").addEventListener("change", renderTable);
+
+    // initial load
     renderDashboard();
+    populateMonthFilter();
     renderTable();
     renderCharts();
   </script>
